@@ -1,0 +1,28 @@
+./InteractionChannel.sol:15:3: Warning: No visibility specified. Defaulting to "public".
+  function  currentName() constant  returns(bytes32){
+  ^
+Spanning multiple lines.
+
+./InteractionChannel.sol:19:3: Warning: No visibility specified. Defaulting to "public".
+  function  lastUpdatedMinutes() constant  returns(uint){
+  ^
+Spanning multiple lines.
+
+./InteractionChannel.sol:23:3: Warning: No visibility specified. Defaulting to "public".
+  function  fromAddres() constant returns(address){
+  ^
+Spanning multiple lines.
+
+./InteractionChannel.sol:27:3: Warning: No visibility specified. Defaulting to "public".
+  function interact(bytes32 yourName) {
+  ^
+Spanning multiple lines.
+
+./InteractionChannel.sol:12:21: Warning: This declaration shadows an existing declaration.
+  event Interaction(bytes32 indexed name, address  indexed addr, uint indexed timeUpdated);
+                    ^------------------^
+./InteractionChannel.sol:8:3: The shadowed declaration is here:
+  bytes32 name;
+  ^----------^
+
+
