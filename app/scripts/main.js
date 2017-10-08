@@ -18,10 +18,20 @@ var contractEvent;
 var contractEventCounter=0;
 
 // Maintains the info on node type
-var     nodeType = 'geth';
+var nodeType = 'geth';
 var compiledBytecode = '0x6060604052341561000f57600080fd5b6101be8061001e6000396000f300606060405263ffffffff7c010000000000000000000000000000000000000000000000000000000060003504166312e92de3811461005d57806362777662146100755780638c659ab71461009a578063bd5b3837146100d657600080fd5b341561006857600080fd5b6100736004356100e9565b005b341561008057600080fd5b610088610162565b60405190815260200160405180910390f35b34156100a557600080fd5b6100ad610168565b60405173ffffffffffffffffffffffffffffffffffffffff909116815260200160405180910390f35b34156100e157600080fd5b610088610184565b60008190556002805473ffffffffffffffffffffffffffffffffffffffff19163373ffffffffffffffffffffffffffffffffffffffff90811691909117918290554260018190559116827f8c3f8124db3586b01b1a3687e65ac69ea4815aa8e9479454b8a8963bf1c6c2a860405160405180910390a450565b60005490565b60025473ffffffffffffffffffffffffffffffffffffffff1690565b600154603c429190910304905600a165627a7a72305820acf3d5ad3cd3cfde8eff165603548ea9543b53ebe423c9a196ab4fb6498679a10029';
 var compiledAbiDefinition = '[{"constant":false,"inputs":[{"name":"yourName","type":"bytes32"}],"name":"interact","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"currentName","outputs":[{"name":"","type":"bytes32"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"fromAddres","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"lastUpdatedMinutes","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"anonymous":false,"inputs":[{"indexed":true,"name":"name","type":"bytes32"},{"indexed":true,"name":"addr","type":"address"},{"indexed":true,"name":"timeUpdated","type":"uint256"}],"name":"Interaction","type":"event"}]';
 var contractAddress = '0x9B494F4d4007B4a898ae9b7c4Afb465dE56b920F'
+var estimatedGas = 4700000;
+
+/**
+ * Listener for load
+ */
+window.addEventListener('load', function() {
+  // Now you can start your app & access web3 freely:
+  startApp()
+
+})
 
 
 /**
@@ -59,6 +69,19 @@ if (typeof web3 !== 'undefined') {
 }
 
 /**
+ * This method is called for connecting to the node
+ * The Provider URL is provided in a Document element with the 
+ * id = provider_url
+ */
+function doConnect()    {
+    setData('connect_status','Not Connected', true);
+    // Get the provider URL
+    var provider = document.getElementById('provider_url').value;
+    window.web3 = new Web3(new Web3.providers.HttpProvider(provider));
+    startApp();
+}
+
+/**
  * Gets the accounts under the node
  * 
  */
@@ -75,7 +98,8 @@ function    doGetAccounts() {
             console.log("Get Accounts error: " + error);
         } else {
             accounts = result;
-            console.log("Get Accounts result: " + accounts)
+            document.getElementById('account').value=accounts;
+            console.log("Get Accounts result: " + accounts);
 
             //setData('accounts_count', result.length, false);
             // You need to have at least 1 account to proceed
@@ -110,73 +134,10 @@ function    doGetAccounts() {
 }
 
 /**
- * This method is called for connecting to the node
- * The Provider URL is provided in a Document element with the 
- * id = provider_url
- */
-function doConnect()    {
-    setData('connect_status','Not Connected', true);
-    // Get the provider URL
-    var provider = document.getElementById('provider_url').value;
-    window.web3 = new Web3(new Web3.providers.HttpProvider(provider));
-    startApp();
-}
-
-/**
- * Starting geth 1.6 - Solidity compilation is not allowed from
- * web3 JSON/RPC
- */
-
-function    doCompileSolidityContract(contractCode)  {
-    
-    
-        var source = contractCode;
-      
-        console.log(flattenSource(source));
-    
-        web3.eth.compile.solidity(source, function(error, result){
-    
-            if(error){
-                console.log(error);
-                //setData('compilation_result',error,true);
-            } else {
-                // This is an issue seen only on windows - solc compile binary - ignore
-                result = compileResultWindowsHack(result);
-                console.log('Compilation Result=',JSON.stringify(result));
-                var contract_1 = '';
-                var code_1 = '';
-                var abi_1 = '';
-                for(var prop in result){
-                    contract_1 = prop;
-                    code_1 = result[prop].code;
-                    if(!code_1){
-                        // Test RPC returns code in result.code
-                        code_1 = result.code;
-                    }
-                    if(result[prop].info){
-                        abi_1 = result[prop].info.abiDefinition;
-                    } else {
-                        // Test RPC does not have the contracts :) in result
-                        abi_1 = result.info.abiDefinition;
-                    }
-                    break;
-                }
-                // Populate the UI elements
-                compiledBytecode=code_1;
-                compiledAbiDefinition=JSON.stringify(abi_1);
-                
-            }
-        });
-    }
-
-/**
  * Deploys the contract - ASYNCH
  */
 
 function    doDeployContract()   {
-    // Reset the deployment results UI
-    //resetDeploymentResultUI();
-
     var     abiDefinitionString = compiledAbiDefinition;
     var     abiDefinition = JSON.parse(abiDefinitionString);
 
@@ -186,7 +147,7 @@ function    doDeployContract()   {
     var  contract = web3.eth.contract(abiDefinition);
 
     // Get the estimated gas
-    var   gas = 4700000;
+    var   gas = estimatedGas;
 
     // 2. Create the params for deployment - all other params are optional, uses default
     var  params = {
@@ -219,5 +180,85 @@ function    doDeployContract()   {
     });
 }
 
+function    doInteract() {
+    // creating the cntract instance
+    var instance = createContractInstance();
+    // read the ui elements
+    var parameterValue = document.getElementById('message').value;
 
+    // Create the transaction object
+    var    txnObject = {
+        from: web3.eth.coinbase,
+        gas: estimatedGas
+    }
+    instance.interact.sendTransaction(parameterValue,txnObject,function(error, result)  {
+
+        console.log('RECVED>>',error,result);   
+        if(error){
+            console.log("Interact error: " + result);
+        } else {
+            console.log("Interact success: " + result);
+        }
+    });    
+} 
+
+// Utility method for creating the contract instance
+function  createContractInstance(){
+    var     abiDefinitionString = compiledAbiDefinition;
+    var     abiDefinition = JSON.parse(abiDefinitionString);
+
+    // Instance uses the definition to create the function
+    var    contract = web3.eth.contract(abiDefinition);
+
+    // Instance needs the address
+    var    instance = contract.at(contractAddress);
+    return instance;
+}
+
+/**
+ * To start the event watching using the contract object
+ */
+
+function    doContractEventWatchStart() {
     
+        if(contractEvent){
+            doContractEventWatchStop();
+        }
+    
+        // Reset the UI
+        setData('watch_contract_instance_event_count','0',false);
+    
+        contractEvent = createContractEventInstance();
+    
+        contractEvent.watch(function(error, result){
+            if(error){
+                console.error('Contract Event Error');
+            } else {
+               
+            //    console.log("Event.watch="+JSON.stringify(result))
+                // increment the count watch_instance_event_count
+                contractEventCounter++;
+                setData('watch_contract_instance_event_count',contractEventCounter, false );
+    
+                addEventListItem('watch_contract_events_list',result,5);
+            }
+        });
+    }
+
+    /**
+ * Utility method for creating an instance of the event
+ */
+function createContractEventInstance(){
+    var contractAddress = contractAddress
+
+    var contractInstance = createContractInstance(contractAddress);
+
+    // geth the indexed data values JSON
+    //var indexedEventValues = document.getElementById('indexed_event_values').value
+    //indexedEventValues = JSON.parse(indexedEventValues)
+
+    //var additionalFilterOptions = document.getElementById('additional_filter_event_values').value;
+    //additionalFilterOptions = JSON.parse(additionalFilterOptions);
+
+    return contractInstance.Interaction();
+}

@@ -5,14 +5,14 @@ pragma solidity ^0.4.4;
  **/
 contract InteractionChannel {
 
-  bytes32 name;
+  string  name;
   uint    lastUpdate;
   address lastAddress;
 
-  event Interaction(bytes32 indexed name, address  indexed addr, uint indexed timeUpdated);
+  event Interaction(string indexed name, address indexed addr, uint indexed timeUpdated);
 
 
-  function  currentName() constant  returns(bytes32){
+  function  currentName() constant  returns(string){
     return name;
   }
 
@@ -24,7 +24,7 @@ contract InteractionChannel {
     return lastAddress;
   }
 
-  function interact(bytes32 yourName) {
+  function interact(string yourName) {
     name = yourName;
     lastAddress = msg.sender;
     lastUpdate = now;

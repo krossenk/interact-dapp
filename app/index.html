@@ -43,12 +43,12 @@
         </div>
         <div class="">
           <label>Say Something</label>
-          <input type="text" id="saysomething" size="30" placeholder="Say Something">
+          <input type="text" id="message" size="30" placeholder="Say Something">
         </div>
         <div></div>
         <button class="button blue" onclick="doCompileSolidityContract()">Compile Contract</button>
         <button class="button blue" onclick="doDeployContract()">Deploy Contract</button>        
-        <button class="button blue" onclick="saySomething()">Interact</button>
+        <button class="button blue" onclick="doInteract()">Interact</button>
         <!-- Here we will display the spinner & etherscan.io link to last txn --> 
         <span id="transaction"><img class="waiting">
           <p id="transaction_message" class="text"></p>
@@ -61,6 +61,15 @@
           <ul id="recent_interactions"></ul>
         </div>
       </div>
+    </div>
+
+    <div>
+      <h1>Events/Logs (5 Latest)</h1>
+      <span><button onclick="doContractEventWatchStart()">event.watch()</button></span>        
+      <span>Recieve Count:</span><span id="watch_contract_instance_event_count" class="notready">Not Watching</span>
+      <ol id="watch_contract_events_list">
+        <!-- This is where the events will be added -->
+      </ol>
     </div>
 
 
