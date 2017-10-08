@@ -9,7 +9,7 @@ contract InteractionChannel {
   uint    lastUpdate;
   address lastAddress;
 
-  event Interaction(string indexed name, address indexed addr, uint indexed timeUpdated);
+  event Interaction(string name, address indexed addr, uint timeUpdated);
 
 
   function  currentName() constant  returns(string){
